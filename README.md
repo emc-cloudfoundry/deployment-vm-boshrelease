@@ -1,4 +1,4 @@
-# bosh-deployment-vm
+# Deployment VM
 
 The deployment vm is a workstation for who want to use bosh_cli and cf_cli to manage the deployed bosh and cloudfoundry.
 
