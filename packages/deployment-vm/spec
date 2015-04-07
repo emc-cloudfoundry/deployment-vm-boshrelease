@@ -1,0 +1,5 @@
+---
+name: deployment-vm
+dependencies: []
+files:
+- deployment-vm/**/*

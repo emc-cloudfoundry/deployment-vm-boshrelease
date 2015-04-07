@@ -1,0 +1,71 @@
+---
+name: emc-deployment-vm
+director_uuid: 4d574749-0e54-473e-8073-50934bfea6c2 ### replace the director_uuid ####
+releases:
+- name: emc-deployment-vm
+  version: latest
+compilation:
+  workers: 1
+  cloud_properties:
+    cpu: 1
+    disk: 18192
+    ram: 4096
+  network: default
+  reuse_compilation_vms: true
+
+### Edit the networks setting follow your environment ####
+networks:
+- name: default
+  subnets:
+  - reserved:
+    - 10.8.0.2 - 10.8.9.60
+    - 10.8.9.70 - 10.8.15.254
+    static:
+    - 10.8.9.61
+    range: 10.8.0.0/20
+    gateway: 10.8.0.1
+    dns:
+    - 10.8.0.13
+    cloud_properties:
+      name: Lab Network
+
+update:
+  canary_watch_time: 200000 - 300000
+  update_watch_time: 200000 - 300000
+  max_in_flight: 1
+  max_errors: 1
+  canaries: 1
+
+resource_pools:
+- name: medium
+  network: default
+  ### you can change the stemcell and version ####
+  stemcell:
+    name: bosh-vsphere-esxi-ubuntu-trusty-go_agent
+    version: 2732
+  size: 1
+  cloud_properties:
+    cpu: 2
+    ram: 2048
+    disk: 30000
+
+jobs:
+- name: deployment-vm
+  templates:
+  - name: deployment-vm
+    release: emc-deployment-vm
+  instances: 1
+  resource_pool: medium
+  ### the size of persistent disk ####
+  persistent_disk: 20000
+  networks:
+  - name: default
+    static_ips:
+    - 10.8.9.61
+properties:
+  deployment_vm:
+    ### accounts will be added when deploying, the pattern is <username>:<password> ###
+    ### if the <password> is not specified, the default password is the same as username. ###
+    accounts:
+    - user1:password
+    - user2

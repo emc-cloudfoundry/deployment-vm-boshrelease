@@ -1,0 +1,7 @@
+---
+final_name: emc-deployment-vm
+blobstore:
+  provider: local
+  options:
+    blobstore_path: blobstore
+

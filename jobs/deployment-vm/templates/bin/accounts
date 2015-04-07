@@ -1,0 +1,43 @@
+#!/bin/bash
+
+function isUserExist()
+{
+  ret=false;
+  getent passwd $1 >/dev/null 2>&1 && ret=true
+  if $ret; then
+    echo '0';
+  else
+    echo '1';
+  fi
+}
+
+if [ ! -f /var/vcap/jobs/deployment-vm/config/accounts ]; then
+  echo "no account need to create, exit."
+  exit 1
+fi
+
+accounts=$(cat /var/vcap/jobs/deployment-vm/config/accounts)
+for acc in $accounts
+do
+  username=$(echo $acc | cut -d ':' -f 1)
+  userExit=`isUserExist $username`;
+  if [ $userExit -eq 1 ]; then
+    useradd -g vcap -G adm -m -s /bin/bash $username
+    echo "user $username create complete, to create a persistent store to user home"
+    if [ -e ${STORE_DIR} -a -d ${STORE_DIR} ]; then
+      mkdir ${STORE_DIR}/$username
+      chown $username:vcap ${STORE_DIR}/$username
+      chmod 700 ${STORE_DIR}/$username
+      ln -s ${STORE_DIR}/$username /home/$username/persis-store
+      echo "persistent store for user home has been created."
+    fi
+  fi
+  echo $acc | chpasswd $username
+done
+grep '/var/vcap/bosh/bin' /etc/environment>/dev/null 2>&1 || sed -i -e 's/\/usr\/local\/sbin/\/var\/vcap\/bosh\/bin:\/usr\/local\/sbin/g' /etc/environment
+echo "change the permission for /var/vcap/bosh"
+chmod 755 /var/vcap/bosh
+echo "change the permission for bosh command"
+chmod 755 /var/vcap/bosh/bin/bosh
+echo "delete the account config file"
+[ -f /var/vcap/jobs/deployment-vm/config/accounts ] && rm /var/vcap/jobs/deployment-vm/config/accounts

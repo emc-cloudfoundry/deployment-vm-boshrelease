@@ -1,0 +1,28 @@
+#!/bin/bash
+
+export PKG_LOC=/var/vcap/packages/deployment-vm/dpkgs
+export PKG_LISTS=${PKG_LOC}/*_list
+export GEM_LOC=/var/vcap/packages/deployment-vm/gems
+export GEM_LISTS=$GEM_LOC/*_list
+
+function install_os_pkgs() {
+        for pkg_list in ${PKG_LISTS}
+ 	do
+		echo "Installing OS packages for ${pkg_list%%_*}"
+		dpkg -i $(cat ${pkg_list})
+	done
+}
+
+function install_gem_pkgs() {
+        for gem_list in ${GEM_LISTS}
+ 	do
+		echo "Installing Ruby gem packages for ${gem_list%%_*}"
+		xargs -a ${gem_list} -I [] /var/vcap/bosh/bin/gem install -l $GEM_LOC/[] --no-ri --no-rdoc
+	done
+}
+
+sleep 10
+install_os_pkgs
+install_gem_pkgs
+update-alternatives --install /usr/bin/java java /usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java 1072
+

@@ -1,0 +1,10 @@
+<% accounts=properties.deployment_vm.accounts %>
+<% if accounts != nil && accounts.length > 0 then %>
+<% (0...accounts.length).each do |i| %>
+<% if accounts[i].include? ':' %>
+<%= accounts[i] %>
+<% else %>
+<%= accounts[i] + ':' + accounts[i] %>
+<% end %>
+<% end %>
+<% end %>

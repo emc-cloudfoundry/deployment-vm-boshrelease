@@ -1,0 +1,5 @@
+check process sshd
+  with pidfile /var/vcap/sys/run/deployment-vm/deployment-vm.pid
+  start program "/var/vcap/jobs/deployment-vm/bin/monit_debugger deployment-vm_ctl '/var/vcap/jobs/deployment-vm/bin/deployment-vm_ctl start'" with timeout 500 seconds
+  stop program "/var/vcap/jobs/deployment-vm/bin/monit_debugger deployment-vm_ctl '/var/vcap/jobs/deployment-vm/bin/deployment-vm_ctl stop'"
+  group vcap

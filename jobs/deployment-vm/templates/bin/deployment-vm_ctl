@@ -1,0 +1,80 @@
+#!/bin/bash
+
+#set -e # exit immediately if a simple command exits with a non-zero status
+set -u # report the usage of uninitialized variables
+
+export BOSH_CLI_VERSION="1.2765.0"
+export CF_CLI_VERSION="6.6.2"
+
+source /var/vcap/jobs/deployment-vm/helpers/ctl_setup.sh 'deployment-vm'
+
+export PORT=${PORT:-5000}
+export LANG=en_US.UTF-8
+
+#chmod -R 755 /var/vcap/jobs/deployment-vm/
+
+function add_pid() {
+    if [ -f $RUN_DIR/$JOB_NAME.pid ]; then
+        rm $RUN_DIR/$JOB_NAME.pid
+    fi
+    touch $RUN_DIR/$JOB_NAME.pid
+    pgrep $1 > $RUN_DIR/$JOB_NAME.pid
+}
+
+##used to debug, add this function can ssh as root
+function config_ssh() {
+    echo "config ssh, enable root to login"
+    /etc/init.d/ssh stop
+    #iptables -A INPUT -p tcp --dport ssh -j ACCEPT
+    cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+    sed -i -e 's/PermitRootLogin no/PermitRootLogin yes/g' /etc/ssh/sshd_config.bak && mv /etc/ssh/sshd_config /etc/ssh/sshd_config.org; mv /etc/ssh/sshd_config.bak /etc/ssh/sshd_config
+    /etc/init.d/ssh start
+}
+
+function check_sshd() {
+    if [ -z "$(pgrep sshd)" ]
+    then
+      echo "starting sshd"
+      service ssh start
+    fi
+}
+
+function remount_tmp() {
+    echo "start to mount the tmp"
+    umount /tmp
+    /usr/bin/truncate -s 10240M /var/vcap/data/deployment-vm_tmp
+    chmod 0700 /var/vcap/data/deployment-vm_tmp 
+    mke2fs -t ext4 -m 1 -F /var/vcap/data/deployment-vm_tmp 
+    mount -t ext4 -o loop /var/vcap/data/deployment-vm_tmp /tmp
+    chown root:vcap /tmp
+    chmod 1777 /tmp
+}
+
+function reset_umask() {
+    sed -i 's/^#*umask.*$/umask 22/' /etc/bashrc
+    sed -i 's/^#*umask.*$/umask 22/' /etc/profile
+}
+
+case $1 in
+  start)
+    echo "start to install packages and gems"
+    source /var/vcap/jobs/deployment-vm/bin/install > $LOG_DIR/install.stdout.log 2>$LOG_DIR/install.stderr.log
+    remount_tmp
+    check_sshd
+    #config_ssh
+    reset_umask
+    add_pid sshd
+    echo "start to config accounts"
+    source /var/vcap/jobs/deployment-vm/bin/accounts > $LOG_DIR/accounts.stdout.log 2>$LOG_DIR/accounts.stderr.log
+    ;;
+
+  stop)
+    service ssh stop
+    ;;
+  *)
+    echo "Usage: deployment-vm_ctl {start|stop}"
+
+    ;;
+
+esac
+exit 0

@@ -1,0 +1,6 @@
+---
+blobstore_secret: 'SECRET'
+blobstore:
+  local:
+    blobstore_path: blobstore
+

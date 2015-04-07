@@ -1,0 +1,14 @@
+---
+name: deployment-vm
+packages:
+- deployment-vm
+templates:
+  bin/deployment-vm_ctl: bin/deployment-vm_ctl
+  bin/accounts: bin/accounts
+  bin/install: bin/install
+  bin/monit_debugger: bin/monit_debugger
+  helpers/ctl_setup.sh: helpers/ctl_setup.sh
+  helpers/ctl_utils.sh: helpers/ctl_utils.sh
+  config/accounts.erb: config/accounts
+  config/gems_list: config/gems_list
+  data/properties.sh.erb: data/properties.sh

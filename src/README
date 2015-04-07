@@ -1,0 +1,4 @@
+Perforce does not manage empty directories,
+so this is a dummy file needed to force Perforce to create the containing directory (src).
+Do not remove this file from Perforce.
+
